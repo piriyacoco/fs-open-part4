@@ -13,6 +13,13 @@ usersRouter.post('/api/users', async (request, response) => {
   
   const body = request.body
 
+  if (body.password.length === 0) {
+  	response.status(400).send({ error: 'password cannot be empty' })
+  }
+  if (body.password.length < 3) {
+  	response.status(400).send({ error: 'password length too short' })
+  }
+
   const saltRounds = 10
   const passwordHash = await bcrypt.hash(body.password, saltRounds)
 
