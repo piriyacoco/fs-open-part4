@@ -25,6 +25,7 @@ app.use(express.static('build'))
 app.use(express.json())
 app.use(middleware.requestLogger)
 
+app.use(middleware.tokenExtractor)
 app.use('/', loginRouter)
 app.use('/', blogsRouter) // app.use('/api/blogs', blogsRouter), this is entry point of router ! otherwise need /api/blogs/api/blogs when doing API
 app.use('/', usersRouter) // app.use('/api/blogs', blogsRouter), this is entry point of router ! otherwise need /api/blogs/api/blogs when doing API

@@ -10,14 +10,6 @@ const User = require('../models/user')
 // app.use(cors())
 // app.use(express.json())
 
-const getTokenFrom = request => {
-  const authorization = request.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    return authorization.substring(7)
-  }
-  return null
-}
-
 blogsRouter.get('/api/blogs', (request, response) => {
   Blog
     .find({})
@@ -34,9 +26,9 @@ blogsRouter.post('/api/blogs', async (request, response) => {
   const body = request.body
   // const user = await request.user
 
-  const token = getTokenFrom(request)
-  const decodedToken = jwt.verify(token, process.env.SECRET)
-  if (!token || !decodedToken.id) {
+  // const token = getTokenFrom(request)
+  const decodedToken = jwt.verify(request.token, process.env.SECRET) // token if have single line
+  if (!request.token || !decodedToken.id) {
     return response.status(401).json({ error: 'token missing or invalid' })
   }
   const user = await User.findById(decodedToken.id)
