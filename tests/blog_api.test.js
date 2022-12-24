@@ -5,11 +5,35 @@ const app = require('../app')
 const api = supertest(app)
 
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const helper = require('./test_helper')
 
 beforeEach(async () => {
+  // await Blog.deleteMany({})
+  await User.deleteMany({})
+  await api
+  	.post('/api/users')
+  	.send(helper.initialUsers[0])
+
+  await api
+  	.post('/api/login')
+  	.send(helper.initialUsers[0])
+  	.expect(response => { initialToken = response.body.token })
+
   await Blog.deleteMany({})
-  await Blog.insertMany(helper.initialBlogs)
+
+  await api
+  	.post('/api/blogs')
+  	.set('Authorization', `bearer ${initialToken}`)
+  	.send(helper.initialBlogs[0])
+
+  await api
+  	.post('/api/blogs')
+  	.set('Authorization', `bearer ${initialToken}`)
+  	.send(helper.initialBlogs[1])
+
+
+  // await Blog.insertMany(helper.initialBlogs)
 })
 
 describe('when there is initially some blogs saved', () => {
@@ -42,6 +66,7 @@ describe('when there is initially some blogs saved', () => {
 
 	  await api
 	    .post('/api/blogs')
+	    .set('Authorization', `bearer ${initialToken}`)
 	    .send(newBlog)
 	    .expect(201)
 	    .expect('Content-Type', /application\/json/)
@@ -55,6 +80,25 @@ describe('when there is initially some blogs saved', () => {
 	  )
 	})
 
+	test('a blog cannot be added without token ', async () => {
+	  const newBlog = {
+	    title: "Canonical string reduction",
+	    author: "Edsger W. Dijkstra",
+	    url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
+	    likes: 12
+	  }
+
+	  await api
+	    .post('/api/blogs')
+	    .set('Authorization', `bearer `)
+	    .send(newBlog)
+	    .expect(401)
+	    //.expect('Content-Type', /application\/json/)
+
+	  const blogsAtEnd = await helper.blogsInDb()
+	  expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+	})
+
 	test('a blog without property likes will default value to 0 ', async () => {
 	  const newBlog = {
 	    title: "Canonical string reduction",
@@ -64,6 +108,7 @@ describe('when there is initially some blogs saved', () => {
 
 	  await api
 	    .post('/api/blogs')
+	    .set('Authorization', `bearer ${initialToken}`)
 	    .send(newBlog)
 	    .expect(201)
 	    .expect('Content-Type', /application\/json/)
@@ -88,11 +133,13 @@ describe('when there is initially some blogs saved', () => {
 
 	  await api
 	    .post('/api/blogs')
+	    .set('Authorization', `bearer ${initialToken}`)
 	    .send(newBlogNoTitle)
 	    .expect(400)
 
 	  await api
 	    .post('/api/blogs')
+	    .set('Authorization', `bearer ${initialToken}`)
 	    .send(newBlogNoUrl)
 	    .expect(400)
 
@@ -108,6 +155,7 @@ describe('when there is initially some blogs saved', () => {
 
 	  await api
 	    .delete(`/api/blogs/${blogToDelete.id}`)
+	    .set('Authorization', `bearer ${initialToken}`)
 	    .expect(204)
 
 	  const blogsAtEnd = await helper.blogsInDb()

@@ -46,10 +46,13 @@ blogsRouter.post('/api/blogs', middleware.userExtractor, async (request, respons
   	user: user._id
   })
 
-  const savedBlog = await blog.save()
-  user.blogs = user.blogs.concat(savedBlog._id)
-  await user.save()
-  response.status(201).json(savedBlog)
+  if (blog.user.toString() === user.id.toString()) {
+
+	  const savedBlog = await blog.save()
+	  user.blogs = user.blogs.concat(savedBlog._id)
+	  await user.save()
+	  response.status(201).json(savedBlog)
+	}
 
 })
 
