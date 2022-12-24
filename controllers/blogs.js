@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken')
 const Blog = require('../models/blog') // added
 const User = require('../models/user')
 
+const middleware = require('../utils/middleware')
+
 // const express = require('express')
 // const app = express()
 
@@ -19,7 +21,7 @@ blogsRouter.get('/api/blogs', (request, response) => {
     })
 })
 
-blogsRouter.post('/api/blogs', async (request, response) => {
+blogsRouter.post('/api/blogs', middleware.userExtractor, async (request, response) => {
 
   // const blog = new Blog(request.body)
 
@@ -27,11 +29,14 @@ blogsRouter.post('/api/blogs', async (request, response) => {
   // const user = await request.user
 
   // const token = getTokenFrom(request)
-  const decodedToken = jwt.verify(request.token, process.env.SECRET) // token if have single line
-  if (!request.token || !decodedToken.id) {
-    return response.status(401).json({ error: 'token missing or invalid' })
-  }
-  const user = await User.findById(decodedToken.id)
+
+  // const decodedToken = jwt.verify(request.token, process.env.SECRET) // token if have single line
+  // if (!request.token || !decodedToken.id) {
+  //   return response.status(401).json({ error: 'token missing or invalid' })
+  // }
+
+  // const user = await User.findById(decodedToken.id)
+  const user = await request.user
 
   const blog = new Blog({
   	title: body.title,
@@ -48,14 +53,17 @@ blogsRouter.post('/api/blogs', async (request, response) => {
 
 })
 
-blogsRouter.delete('/api/blogs/:id', async (request, response) => {
+blogsRouter.delete('/api/blogs/:id', middleware.userExtractor, async (request, response) => {
 	const blog = await Blog.findById(request.params.id)
 
-	const decodedToken = jwt.verify(request.token, process.env.SECRET) // token if have single line
-    if (!request.token || !decodedToken.id) {
-      return response.status(401).json({ error: 'token missing or invalid' })
-    }
-    const user = await User.findById(decodedToken.id)
+	// const decodedToken = jwt.verify(request.token, process.env.SECRET) // token if have single line
+    // if (!request.token || !decodedToken.id) {
+    //   return response.status(401).json({ error: 'token missing or invalid' })
+    // }
+
+    // const user = await User.findById(decodedToken.id)
+    const user = await request.user
+
 	if (blog.user.toString() === user.id.toString()) {
 
 		await Blog.findByIdAndRemove(request.params.id)
